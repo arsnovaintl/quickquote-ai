@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 
 // ─── CONSTANTS ───────────────────────────────────────────────────────────────
-const GEMINI_API_KEY = "AIzaSyDA_I7hlqI--tktFwkaencL40cye1jIq5Q";
+const GEMINI_API_KEY = "";
 const FLW_PUBLIC_KEY = "FLWPUBK-07b39e1b497a525e3ef38dce1ba774a4-X";
 const PRICE_PER_BID = 3; // USD per bid
 
