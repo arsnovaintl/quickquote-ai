@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 
 // ─── CONSTANTS ───────────────────────────────────────────────────────────────
-const GEMINI_API_KEY = "";
+const GEMINI_API_KEY = "AIzaSyAXXSHE3tXfXcdPUm19HpHodJrU_fK8ZHE";
 const FLW_PUBLIC_KEY = "FLWPUBK-07b39e1b497a525e3ef38dce1ba774a4-X";
 const PRICE_PER_BID = 3; // USD per bid
 
@@ -45,8 +45,7 @@ Respond ONLY in this exact JSON format (no markdown, no backticks):
   "nextSteps": ["Step 1", "Step 2", "Step 3"]
 }`;
 
-  const isProduction = import.meta.env.PROD;
-  const apiUrl = isProduction ? "/.netlify/functions/gemini" : `/api/gemini/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+  const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
 
   const res = await fetch(apiUrl, {
     method: "POST",
@@ -312,7 +311,6 @@ const S = {
     background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 10,
     padding: "12px 20px", marginBottom: 16, fontSize: 14, color: "#888",
   },
-  // Result styles
   resultCard: {
     background: "#161616", border: "1px solid #E8572A33", borderRadius: 16, padding: 32, marginBottom: 20,
   },
@@ -337,7 +335,7 @@ const S = {
 
 // ─── MAIN APP ─────────────────────────────────────────────────────────────────
 export default function App() {
-  const [step, setStep] = useState("form"); // form | pay | loading | result
+  const [step, setStep] = useState("form");
   const [jobType, setJobType] = useState("painting");
   const [jobDescription, setJobDescription] = useState("");
   const [contractorName, setContractorName] = useState("");
@@ -374,7 +372,6 @@ export default function App() {
     }
   };
 
-  // DEV: Skip payment for testing
   const handleDevSkip = async () => {
     if (!jobDescription || !contractorName || !customerName) {
       setError("Fill in all fields first.");
@@ -391,13 +388,11 @@ export default function App() {
       <script src="https://checkout.flutterwave.com/v3.js" async />
 
       <div style={S.container}>
-        {/* NAV */}
         <nav style={S.nav}>
           <div style={S.logo}>Quick<span style={S.logoAccent}>Quote</span></div>
           <div style={S.badge}>Professional Bids in 10 Seconds</div>
         </nav>
 
-        {/* HERO */}
         {step === "form" && (
           <div style={S.hero}>
             <div style={S.heroEyebrow}>For Painters · Cleaners · Landscapers · Handymen</div>
@@ -406,7 +401,6 @@ export default function App() {
           </div>
         )}
 
-        {/* ── FORM ─── */}
         {step === "form" && (
           <>
             <div style={S.card}>
@@ -468,7 +462,6 @@ export default function App() {
           </>
         )}
 
-        {/* ── LOADING ─── */}
         {step === "loading" && (
           <div style={{ textAlign: "center", padding: "120px 0" }}>
             <div style={{ fontSize: 48, marginBottom: 24, animation: "spin 1s linear infinite" }}>⚙️</div>
@@ -478,7 +471,6 @@ export default function App() {
           </div>
         )}
 
-        {/* ── RESULT ─── */}
         {step === "result" && bid && (
           <>
             <div style={{ paddingTop: 48, paddingBottom: 16, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
