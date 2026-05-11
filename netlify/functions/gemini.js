@@ -1,5 +1,5 @@
 exports.handler = async (event, context) => {
-  const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "AIzaSyDA_I7hlqI--tktFwkaencL40cye1jIq5Q";
+  const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
   const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
