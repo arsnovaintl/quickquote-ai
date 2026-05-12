@@ -56,7 +56,11 @@ Respond ONLY in this exact JSON format (no markdown, no backticks):
   const data = await res.json();
   const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
   const clean = raw.replace(/```json|```/g, "").trim();
-  return JSON.parse(clean);
+  try {
+    return JSON.parse(clean);
+  } catch (err) {
+    throw new Error("Invalid JSON: " + clean);
+  }
 }
 
 function launchFlutterwave({ email, name, onSuccess }) {
