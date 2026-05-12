@@ -1,9 +1,8 @@
 import { useState, useRef } from "react";
 
-// ─── CONSTANTS ───────────────────────────────────────────────────────────────
 const GEMINI_API_KEY = "AIzaSyAXXSHE3tXfXcdPUm19HpHodJrU_fK8ZHE";
 const FLW_PUBLIC_KEY = "FLWPUBK-07b39e1b497a525e3ef38dce1ba774a4-X";
-const PRICE_PER_BID = 3; // USD per bid
+const PRICE_PER_BID = 3;
 
 const JOB_TYPES = [
   { id: "painting", label: "Painting", icon: "🎨", color: "#E8572A" },
@@ -19,7 +18,6 @@ const EXAMPLE_INPUTS = {
   handyman: "Install ceiling fan in bedroom, patch 3 drywall holes, replace 2 door handles",
 };
 
-// ─── GEMINI API ───────────────────────────────────────────────────────────────
 async function generateBid(jobType, jobDescription, customerName, contractorName) {
   const prompt = `You are an expert contractor bid writer. Generate a PROFESSIONAL contractor bid proposal.
 
@@ -45,7 +43,7 @@ Respond ONLY in this exact JSON format (no markdown, no backticks):
   "nextSteps": ["Step 1", "Step 2", "Step 3"]
 }`;
 
-  const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+  const apiUrl = "/.netlify/functions/gemini";
 
   const res = await fetch(apiUrl, {
     method: "POST",
@@ -61,7 +59,6 @@ Respond ONLY in this exact JSON format (no markdown, no backticks):
   return JSON.parse(clean);
 }
 
-// ─── FLUTTERWAVE PAYMENT ──────────────────────────────────────────────────────
 function launchFlutterwave({ email, name, onSuccess }) {
   if (!window.FlutterwaveCheckout) {
     alert("Payment system loading... please try again in a moment.");
@@ -86,12 +83,9 @@ function launchFlutterwave({ email, name, onSuccess }) {
   });
 }
 
-// ─── PDF GENERATION ───────────────────────────────────────────────────────────
 function generatePDF(bid, jobType, contractorName, customerName) {
   const jobMeta = JOB_TYPES.find((j) => j.id === jobType);
-  const date = new Date().toLocaleDateString("en-US", {
-    year: "numeric", month: "long", day: "numeric",
-  });
+  const date = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
   const bidNumber = `QQ-${Date.now().toString().slice(-6)}`;
 
   const html = `<!DOCTYPE html>
@@ -150,7 +144,6 @@ function generatePDF(bid, jobType, contractorName, customerName) {
     <div><strong>Valid for</strong> 30 days</div>
   </div>
 </div>
-
 <div class="body">
   <div class="parties">
     <div>
@@ -163,67 +156,32 @@ function generatePDF(bid, jobType, contractorName, customerName) {
       <div class="party-name">${customerName}</div>
     </div>
   </div>
-
   <div class="section-title">Scope of Work</div>
-  <div class="scope">
-    <ul>${bid.scopeOfWork.map((s) => `<li>${s}</li>`).join("")}</ul>
-  </div>
-
+  <div class="scope"><ul>${bid.scopeOfWork.map((s) => `<li>${s}</li>`).join("")}</ul></div>
   <div class="section-title">Cost Breakdown</div>
   <table>
-    <thead>
-      <tr><th>Description</th><th>Qty</th><th>Unit</th><th>Unit Price</th><th>Total</th></tr>
-    </thead>
-    <tbody>
-      ${bid.lineItems.map((item) => `
-      <tr>
-        <td>${item.description}</td>
-        <td>${item.qty}</td>
-        <td>${item.unit}</td>
-        <td>$${item.unitPrice.toFixed(2)}</td>
-        <td>$${item.total.toFixed(2)}</td>
-      </tr>`).join("")}
-    </tbody>
+    <thead><tr><th>Description</th><th>Qty</th><th>Unit</th><th>Unit Price</th><th>Total</th></tr></thead>
+    <tbody>${bid.lineItems.map((item) => `<tr><td>${item.description}</td><td>${item.qty}</td><td>${item.unit}</td><td>$${item.unitPrice.toFixed(2)}</td><td>$${item.total.toFixed(2)}</td></tr>`).join("")}</tbody>
   </table>
-
   <div class="totals">
     <div class="totals-row"><span>Subtotal</span><span>$${bid.subtotal.toFixed(2)}</span></div>
     <div class="totals-row"><span>Tax / Materials Markup</span><span>$${bid.tax.toFixed(2)}</span></div>
     <div class="totals-total"><span>TOTAL</span><span style="color:#E8572A">$${bid.total.toFixed(2)}</span></div>
   </div>
-
   <div class="section-title">Project Details</div>
   <div class="info-grid">
-    <div class="info-box">
-      <div class="info-box-label">Timeline</div>
-      <div class="info-box-value">${bid.timeline}</div>
-    </div>
-    <div class="info-box">
-      <div class="info-box-label">Payment Terms</div>
-      <div class="info-box-value">${bid.paymentTerms}</div>
-    </div>
-    <div class="info-box" style="grid-column: 1 / -1;">
-      <div class="info-box-label">Warranty</div>
-      <div class="info-box-value">${bid.warranty}</div>
-    </div>
+    <div class="info-box"><div class="info-box-label">Timeline</div><div class="info-box-value">${bid.timeline}</div></div>
+    <div class="info-box"><div class="info-box-label">Payment Terms</div><div class="info-box-value">${bid.paymentTerms}</div></div>
+    <div class="info-box" style="grid-column: 1 / -1;"><div class="info-box-label">Warranty</div><div class="info-box-value">${bid.warranty}</div></div>
   </div>
-
   <div class="next-steps">
     <h3>Next Steps to Get Started</h3>
     <ol>${bid.nextSteps.map((s) => `<li>${s}</li>`).join("")}</ol>
   </div>
-
   <div class="disclaimer"><strong>Disclaimer:</strong> ${bid.disclaimer}</div>
-
   <div class="footer">
-    <div>
-      <div class="sig-line">Contractor Signature</div>
-      <div style="margin-top:4px;">${contractorName}</div>
-    </div>
-    <div style="text-align:right;">
-      <div class="sig-line">Client Signature / Date</div>
-      <div style="margin-top:4px;">${customerName}</div>
-    </div>
+    <div><div class="sig-line">Contractor Signature</div><div style="margin-top:4px;">${contractorName}</div></div>
+    <div style="text-align:right;"><div class="sig-line">Client Signature / Date</div><div style="margin-top:4px;">${customerName}</div></div>
   </div>
 </div>
 </body>
@@ -235,85 +193,32 @@ function generatePDF(bid, jobType, contractorName, customerName) {
   setTimeout(() => win.print(), 600);
 }
 
-// ─── STYLES ───────────────────────────────────────────────────────────────────
 const S = {
-  app: {
-    minHeight: "100vh",
-    background: "#0f0f0f",
-    fontFamily: "'DM Sans', 'Helvetica Neue', sans-serif",
-    color: "#f0ede8",
-    position: "relative",
-    overflow: "hidden",
-  },
-  grain: {
-    position: "fixed", inset: 0, opacity: 0.04, pointerEvents: "none", zIndex: 0,
-    backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
-  },
+  app: { minHeight: "100vh", background: "#0f0f0f", fontFamily: "'DM Sans', 'Helvetica Neue', sans-serif", color: "#f0ede8", position: "relative", overflow: "hidden" },
+  grain: { position: "fixed", inset: 0, opacity: 0.04, pointerEvents: "none", zIndex: 0, backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")` },
   container: { maxWidth: 780, margin: "0 auto", padding: "0 24px", position: "relative", zIndex: 1 },
   nav: { padding: "28px 0 0", display: "flex", alignItems: "center", justifyContent: "space-between" },
   logo: { fontSize: 22, fontWeight: 800, letterSpacing: "-1px", color: "#f0ede8" },
   logoAccent: { color: "#E8572A" },
-  badge: {
-    background: "#1e1e1e", border: "1px solid #2a2a2a", borderRadius: 20,
-    padding: "6px 14px", fontSize: 12, color: "#888", letterSpacing: "0.5px",
-  },
+  badge: { background: "#1e1e1e", border: "1px solid #2a2a2a", borderRadius: 20, padding: "6px 14px", fontSize: 12, color: "#888", letterSpacing: "0.5px" },
   hero: { paddingTop: 72, paddingBottom: 56, textAlign: "center" },
-  heroEyebrow: {
-    display: "inline-block", background: "#1e1e1e", border: "1px solid #E8572A33",
-    color: "#E8572A", borderRadius: 20, padding: "5px 14px", fontSize: 12,
-    letterSpacing: "1px", textTransform: "uppercase", marginBottom: 24,
-  },
-  heroTitle: {
-    fontSize: "clamp(36px, 6vw, 60px)", fontWeight: 800, lineHeight: 1.1,
-    letterSpacing: "-2px", marginBottom: 16,
-  },
+  heroEyebrow: { display: "inline-block", background: "#1e1e1e", border: "1px solid #E8572A33", color: "#E8572A", borderRadius: 20, padding: "5px 14px", fontSize: 12, letterSpacing: "1px", textTransform: "uppercase", marginBottom: 24 },
+  heroTitle: { fontSize: "clamp(36px, 6vw, 60px)", fontWeight: 800, lineHeight: 1.1, letterSpacing: "-2px", marginBottom: 16 },
   heroSub: { fontSize: 17, color: "#888", maxWidth: 480, margin: "0 auto", lineHeight: 1.6 },
-  card: {
-    background: "#161616", border: "1px solid #242424", borderRadius: 16,
-    padding: 32, marginBottom: 20,
-  },
+  card: { background: "#161616", border: "1px solid #242424", borderRadius: 16, padding: 32, marginBottom: 20 },
   cardTitle: { fontSize: 13, letterSpacing: "1.5px", textTransform: "uppercase", color: "#666", marginBottom: 20 },
   jobGrid: { display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12 },
-  jobBtn: (selected, color) => ({
-    background: selected ? "#1e1e1e" : "transparent",
-    border: `1.5px solid ${selected ? color : "#242424"}`,
-    borderRadius: 10, padding: "14px 16px", cursor: "pointer",
-    color: selected ? "#f0ede8" : "#888", textAlign: "left",
-    transition: "all 0.15s ease", display: "flex", alignItems: "center", gap: 10,
-  }),
+  jobBtn: (selected, color) => ({ background: selected ? "#1e1e1e" : "transparent", border: `1.5px solid ${selected ? color : "#242424"}`, borderRadius: 10, padding: "14px 16px", cursor: "pointer", color: selected ? "#f0ede8" : "#888", textAlign: "left", transition: "all 0.15s ease", display: "flex", alignItems: "center", gap: 10 }),
   jobIcon: { fontSize: 20 },
   jobLabel: { fontSize: 14, fontWeight: 600 },
   label: { display: "block", fontSize: 12, letterSpacing: "1px", textTransform: "uppercase", color: "#666", marginBottom: 8 },
-  input: {
-    width: "100%", background: "#0f0f0f", border: "1.5px solid #242424",
-    borderRadius: 10, padding: "12px 16px", color: "#f0ede8", fontSize: 15,
-    outline: "none", fontFamily: "inherit", transition: "border-color 0.15s",
-    boxSizing: "border-box",
-  },
-  textarea: {
-    width: "100%", background: "#0f0f0f", border: "1.5px solid #242424",
-    borderRadius: 10, padding: "14px 16px", color: "#f0ede8", fontSize: 15,
-    outline: "none", fontFamily: "inherit", resize: "vertical", minHeight: 100,
-    transition: "border-color 0.15s", boxSizing: "border-box", lineHeight: 1.6,
-  },
+  input: { width: "100%", background: "#0f0f0f", border: "1.5px solid #242424", borderRadius: 10, padding: "12px 16px", color: "#f0ede8", fontSize: 15, outline: "none", fontFamily: "inherit", transition: "border-color 0.15s", boxSizing: "border-box" },
+  textarea: { width: "100%", background: "#0f0f0f", border: "1.5px solid #242424", borderRadius: 10, padding: "14px 16px", color: "#f0ede8", fontSize: 15, outline: "none", fontFamily: "inherit", resize: "vertical", minHeight: 100, transition: "border-color 0.15s", boxSizing: "border-box", lineHeight: 1.6 },
   hint: { fontSize: 12, color: "#555", marginTop: 8, lineHeight: 1.5 },
   row: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 },
-  btn: (variant = "primary") => ({
-    width: "100%", padding: "15px 24px", borderRadius: 10, border: "none",
-    cursor: "pointer", fontSize: 15, fontWeight: 700, letterSpacing: "0.3px",
-    fontFamily: "inherit", transition: "all 0.15s ease",
-    background: variant === "primary" ? "#E8572A" : "#1e1e1e",
-    color: variant === "primary" ? "#fff" : "#f0ede8",
-    border: variant === "secondary" ? "1.5px solid #2a2a2a" : "none",
-  }),
-  pricePill: {
-    display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-    background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 10,
-    padding: "12px 20px", marginBottom: 16, fontSize: 14, color: "#888",
-  },
-  resultCard: {
-    background: "#161616", border: "1px solid #E8572A33", borderRadius: 16, padding: 32, marginBottom: 20,
-  },
+  btn: (variant = "primary") => ({ width: "100%", padding: "15px 24px", borderRadius: 10, border: variant === "secondary" ? "1.5px solid #2a2a2a" : "none", cursor: "pointer", fontSize: 15, fontWeight: 700, letterSpacing: "0.3px", fontFamily: "inherit", transition: "all 0.15s ease", background: variant === "primary" ? "#E8572A" : "#1e1e1e", color: variant === "primary" ? "#fff" : "#f0ede8" }),
+  pricePill: { display: "flex", alignItems: "center", justifyContent: "center", gap: 8, background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 10, padding: "12px 20px", marginBottom: 16, fontSize: 14, color: "#888" },
+  resultCard: { background: "#161616", border: "1px solid #E8572A33", borderRadius: 16, padding: 32, marginBottom: 20 },
   resultTitle: { fontSize: 22, fontWeight: 800, letterSpacing: "-0.5px", marginBottom: 4, color: "#f0ede8" },
   resultSub: { fontSize: 13, color: "#666", marginBottom: 28 },
   scopeItem: { display: "flex", gap: 10, padding: "10px 0", borderBottom: "1px solid #1e1e1e", fontSize: 14, color: "#ccc", alignItems: "flex-start" },
@@ -333,7 +238,6 @@ const S = {
   footer: { textAlign: "center", padding: "40px 0", color: "#444", fontSize: 12, lineHeight: 1.8 },
 };
 
-// ─── MAIN APP ─────────────────────────────────────────────────────────────────
 export default function App() {
   const [step, setStep] = useState("form");
   const [jobType, setJobType] = useState("painting");
@@ -344,20 +248,11 @@ export default function App() {
   const [bid, setBid] = useState(null);
   const [error, setError] = useState("");
 
-  const selectedJob = JOB_TYPES.find((j) => j.id === jobType);
-
   const handlePay = () => {
-    if (!jobDescription || !contractorName || !customerName || !email) {
-      setError("Please fill in all fields.");
-      return;
-    }
+    if (!jobDescription || !contractorName || !customerName || !email) { setError("Please fill in all fields."); return; }
     setError("");
     setStep("pay");
-    launchFlutterwave({
-      email,
-      name: contractorName,
-      onSuccess: handleGenerate,
-    });
+    launchFlutterwave({ email, name: contractorName, onSuccess: handleGenerate });
   };
 
   const handleGenerate = async () => {
@@ -373,10 +268,7 @@ export default function App() {
   };
 
   const handleDevSkip = async () => {
-    if (!jobDescription || !contractorName || !customerName) {
-      setError("Fill in all fields first.");
-      return;
-    }
+    if (!jobDescription || !contractorName || !customerName) { setError("Fill in all fields first."); return; }
     setError("");
     await handleGenerate();
   };
@@ -386,7 +278,6 @@ export default function App() {
       <div style={S.grain} />
       <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700;800&display=swap" rel="stylesheet" />
       <script src="https://checkout.flutterwave.com/v3.js" async />
-
       <div style={S.container}>
         <nav style={S.nav}>
           <div style={S.logo}>Quick<span style={S.logoAccent}>Quote</span></div>
@@ -414,7 +305,6 @@ export default function App() {
                 ))}
               </div>
             </div>
-
             <div style={S.card}>
               <div style={S.cardTitle}>2 · Your Details</div>
               <div style={S.row}>
@@ -430,35 +320,15 @@ export default function App() {
               <label style={S.label}>Your Email (for receipt)</label>
               <input style={{ ...S.input, marginBottom: 0 }} placeholder="you@email.com" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
             </div>
-
             <div style={S.card}>
               <div style={S.cardTitle}>3 · Describe the Job</div>
-              <textarea
-                style={S.textarea}
-                placeholder={EXAMPLE_INPUTS[jobType]}
-                value={jobDescription}
-                onChange={(e) => setJobDescription(e.target.value)}
-              />
-              <p style={S.hint}>
-                Include: what you're doing, materials, time, your price expectation.<br />
-                Example: "{EXAMPLE_INPUTS[jobType]}"
-              </p>
+              <textarea style={S.textarea} placeholder={EXAMPLE_INPUTS[jobType]} value={jobDescription} onChange={(e) => setJobDescription(e.target.value)} />
+              <p style={S.hint}>Include: what you're doing, materials, time, your price expectation.<br />Example: "{EXAMPLE_INPUTS[jobType]}"</p>
             </div>
-
             {error && <div style={{ color: "#E8572A", fontSize: 13, marginBottom: 12, textAlign: "center" }}>{error}</div>}
-
-            <div style={S.pricePill}>
-              <span>💳</span>
-              <span>One bid = <strong style={{ color: "#f0ede8" }}>${PRICE_PER_BID}</strong> · Instant professional PDF</span>
-            </div>
-
-            <button style={S.btn("primary")} onClick={handlePay}>
-              Generate My Bid → Pay ${PRICE_PER_BID}
-            </button>
-
-            <button style={{ ...S.btn("secondary"), marginTop: 10, fontSize: 12, color: "#555" }} onClick={handleDevSkip}>
-              [DEV] Skip Payment & Test
-            </button>
+            <div style={S.pricePill}><span>💳</span><span>One bid = <strong style={{ color: "#f0ede8" }}>${PRICE_PER_BID}</strong> · Instant professional PDF</span></div>
+            <button style={S.btn("primary")} onClick={handlePay}>Generate My Bid → Pay ${PRICE_PER_BID}</button>
+            <button style={{ ...S.btn("secondary"), marginTop: 10, fontSize: 12, color: "#555" }} onClick={handleDevSkip}>[DEV] Skip Payment & Test</button>
           </>
         )}
 
@@ -478,72 +348,35 @@ export default function App() {
                 <div style={{ fontSize: 12, color: "#E8572A", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 6 }}>✓ Bid Ready</div>
                 <h2 style={{ fontSize: 26, fontWeight: 800, letterSpacing: "-0.5px" }}>Your Professional Proposal</h2>
               </div>
-              <button style={{ ...S.btn("secondary"), width: "auto", padding: "12px 20px", fontSize: 13 }} onClick={() => { setStep("form"); setBid(null); }}>
-                ← New Bid
-              </button>
+              <button style={{ ...S.btn("secondary"), width: "auto", padding: "12px 20px", fontSize: 13 }} onClick={() => { setStep("form"); setBid(null); }}>← New Bid</button>
             </div>
-
             <div style={S.resultCard}>
               <div style={S.resultTitle}>{bid.proposalTitle}</div>
               <div style={S.resultSub}>Prepared for {customerName} · by {contractorName}</div>
-
               <div style={{ fontSize: 11, letterSpacing: "1.5px", textTransform: "uppercase", color: "#555", marginBottom: 12 }}>Scope of Work</div>
-              {bid.scopeOfWork.map((s, i) => (
-                <div key={i} style={S.scopeItem}><span style={S.arrow}>→</span><span>{s}</span></div>
-              ))}
-
+              {bid.scopeOfWork.map((s, i) => (<div key={i} style={S.scopeItem}><span style={S.arrow}>→</span><span>{s}</span></div>))}
               <div style={{ fontSize: 11, letterSpacing: "1.5px", textTransform: "uppercase", color: "#555", margin: "24px 0 12px" }}>Cost Breakdown</div>
               <table style={S.table}>
-                <thead>
-                  <tr>
-                    <th style={S.th}>Description</th>
-                    <th style={S.th}>Qty</th>
-                    <th style={S.th}>Unit</th>
-                    <th style={{ ...S.th, textAlign: "right" }}>Total</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {bid.lineItems.map((item, i) => (
-                    <tr key={i}>
-                      <td style={S.td}>{item.description}</td>
-                      <td style={S.td}>{item.qty}</td>
-                      <td style={S.td}>{item.unit}</td>
-                      <td style={{ ...S.td, textAlign: "right" }}>${item.total.toFixed(2)}</td>
-                    </tr>
-                  ))}
-                </tbody>
+                <thead><tr><th style={S.th}>Description</th><th style={S.th}>Qty</th><th style={S.th}>Unit</th><th style={{ ...S.th, textAlign: "right" }}>Total</th></tr></thead>
+                <tbody>{bid.lineItems.map((item, i) => (<tr key={i}><td style={S.td}>{item.description}</td><td style={S.td}>{item.qty}</td><td style={S.td}>{item.unit}</td><td style={{ ...S.td, textAlign: "right" }}>${item.total.toFixed(2)}</td></tr>))}</tbody>
               </table>
-
               <div style={{ maxWidth: 280, marginLeft: "auto", marginTop: 16 }}>
                 <div style={S.totalRow}><span>Subtotal</span><span>${bid.subtotal.toFixed(2)}</span></div>
                 <div style={S.totalRow}><span>Tax / Markup</span><span>${bid.tax.toFixed(2)}</span></div>
                 <div style={S.grandTotal}><span>Total</span><span style={{ color: "#E8572A" }}>${bid.total.toFixed(2)}</span></div>
               </div>
-
               <div style={{ fontSize: 11, letterSpacing: "1.5px", textTransform: "uppercase", color: "#555", margin: "24px 0 12px" }}>Project Details</div>
               <div style={S.infoGrid}>
                 <div style={S.infoBox}><div style={S.infoBoxLabel}>Timeline</div><div style={S.infoBoxVal}>{bid.timeline}</div></div>
                 <div style={S.infoBox}><div style={S.infoBoxLabel}>Payment Terms</div><div style={S.infoBoxVal}>{bid.paymentTerms}</div></div>
                 <div style={{ ...S.infoBox, gridColumn: "1 / -1" }}><div style={S.infoBoxLabel}>Warranty</div><div style={S.infoBoxVal}>{bid.warranty}</div></div>
               </div>
-
               <div style={{ fontSize: 11, letterSpacing: "1.5px", textTransform: "uppercase", color: "#555", margin: "24px 0 12px" }}>Next Steps</div>
-              {bid.nextSteps.map((s, i) => (
-                <div key={i} style={S.nextStep}>
-                  <div style={S.stepNum}>{i + 1}</div>
-                  <span>{s}</span>
-                </div>
-              ))}
-
+              {bid.nextSteps.map((s, i) => (<div key={i} style={S.nextStep}><div style={S.stepNum}>{i + 1}</div><span>{s}</span></div>))}
               <div style={S.disclaimer}><strong>Disclaimer:</strong> {bid.disclaimer}</div>
             </div>
-
-            <button style={S.btn("primary")} onClick={() => generatePDF(bid, jobType, contractorName, customerName)}>
-              🖨️ Download / Print PDF
-            </button>
-            <button style={{ ...S.btn("secondary"), marginTop: 10 }} onClick={() => { setStep("form"); setBid(null); }}>
-              Generate Another Bid
-            </button>
+            <button style={S.btn("primary")} onClick={() => generatePDF(bid, jobType, contractorName, customerName)}>🖨️ Download / Print PDF</button>
+            <button style={{ ...S.btn("secondary"), marginTop: 10 }} onClick={() => { setStep("form"); setBid(null); }}>Generate Another Bid</button>
           </>
         )}
 
